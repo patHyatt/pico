@@ -1,3 +1,5 @@
+import { Ai } from '@cloudflare/ai'
+
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
  *
@@ -9,24 +11,34 @@
  */
 
 export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+	AI: Ai;
 }
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
+		if (request.method !== 'POST') {
+			return new Response('Method Not Allowed', { status: 405 })
+		}
+
+		const ai = new Ai(env.AI)
+
+		const formData = await request.formData();
+		const animal = formData.get('animal')
+		const universe = formData.get('universe')
+
+		const inputs = {
+			prompt: `a ${animal} character in the ${universe} universe`,
+		};
+
+		const response = await ai.run(
+			"@cf/bytedance/stable-diffusion-xl-lightning",
+			inputs
+		);
+
+		return new Response(response, {
+			headers: {
+				"content-type": "image/png"
+			}
+		});
 	},
 };

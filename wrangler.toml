@@ -1,4 +1,4 @@
-name = "crimson-pond-a470"
+name = "pico"
 main = "src/index.ts"
 compatibility_date = "2024-04-05"
 compatibility_flags = ["nodejs_compat"]
